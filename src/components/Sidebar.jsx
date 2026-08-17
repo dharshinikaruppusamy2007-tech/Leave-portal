@@ -1,9 +1,10 @@
 import React from 'react';
-import { User, Send, History, Clock, Users, Info, List, LogOut } from 'lucide-react';
+import { LayoutDashboard, User, Send, History, Clock, Users, Info, List, LogOut } from 'lucide-react';
 
 const Sidebar = ({ role, activeSection, setActiveSection, onLogout }) => {
     const menuItems = {
         student: [
+            { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
             { id: 'profile', label: 'My Profile', icon: <User size={20} /> },
             { id: 'apply', label: 'Apply Leave', icon: <Send size={20} /> },
             { id: 'history', label: 'Academic History', icon: <History size={20} /> },
@@ -19,76 +20,29 @@ const Sidebar = ({ role, activeSection, setActiveSection, onLogout }) => {
     };
 
     return (
-        <aside className="sidebar slide-in">
-            <div className="sidebar-logo">
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 700, textAlign: 'center', marginBottom: '3rem', color: 'white' }}>SkyPortal</h2>
+        <aside className="sp-sidebar">
+            <div className="sp-sidebar-logo">
+                <div className="sp-sidebar-logo-icon">S</div>
+                <span className="sp-sidebar-logo-text">SkyPortal</span>
             </div>
 
-            <nav className="sidebar-menu">
+            <nav className="sp-sidebar-nav">
                 {menuItems[role].map((item) => (
-                    <div key={item.id} className="menu-item" style={{ marginBottom: '0.5rem' }}>
-                        <button
-                            onClick={() => setActiveSection(item.id)}
-                            className={`menu-link ${activeSection === item.id ? 'active' : ''}`}
-                        >
-                            {item.icon}
-                            <span className="menu-label">{item.label}</span>
-                        </button>
-                    </div>
+                    <button
+                        key={item.id}
+                        onClick={() => setActiveSection(item.id)}
+                        className={`sp-sidebar-link ${activeSection === item.id ? 'sp-sidebar-active' : ''}`}
+                    >
+                        {item.icon}
+                        <span>{item.label}</span>
+                    </button>
                 ))}
             </nav>
 
-            <button className="menu-link logout-btn" onClick={onLogout} style={{ marginTop: 'auto', color: '#ff4757', border: 'none', background: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+            <button className="sp-sidebar-link sp-sidebar-logout" onClick={onLogout}>
                 <LogOut size={20} />
-                <span className="menu-label">Logout</span>
+                <span>Logout</span>
             </button>
-
-            <style jsx>{`
-        .sidebar {
-          width: var(--sidebar-width);
-          height: 100vh;
-          background: rgba(0, 0, 0, 0.3);
-          backdrop-filter: blur(20px);
-          position: fixed;
-          left: 0;
-          top: 0;
-          padding: 2rem 1rem;
-          display: flex;
-          flex-direction: column;
-          border-right: 1px solid var(--glass-border);
-          z-index: 100;
-        }
-        .menu-link {
-          display: flex;
-          align-items: center;
-          padding: 12px 15px;
-          text-decoration: none;
-          color: var(--text-dim);
-          border-radius: 12px;
-          transition: var(--transition);
-          width: 100%;
-          background: none;
-          border: none;
-          cursor: pointer;
-        }
-        .menu-link i, .menu-link svg {
-          margin-right: 15px;
-          width: 20px;
-          text-align: center;
-        }
-        .menu-link:hover, .menu-link.active {
-          background: var(--glass-bg);
-          color: white;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        @media (max-width: 992px) {
-          .sidebar { width: 80px; padding: 2rem 0.5rem; }
-          .menu-label { display: none; }
-          .sidebar-logo h2 { display: none; }
-          .menu-link { justify-content: center; }
-          .menu-link svg { margin-right: 0; }
-        }
-      `}</style>
         </aside>
     );
 };

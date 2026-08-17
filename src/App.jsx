@@ -1,21 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import Auth from './components/Auth';
+import React, { useState, useEffect, useCallback } from 'react';
+import Login from './components/Login';
 import Register from './components/Register';
 import Sidebar from './components/Sidebar';
-import StudentPortal from './components/StudentPortal';
+import Dashboard from './components/Dashboard';
+import MyProfile from './components/MyProfile';
+import ApplyLeave from './components/ApplyLeave';
+import AcademicHistory from './components/AcademicHistory';
 import StaffPortal from './components/StaffPortal';
 import ParentPortal from './components/ParentPortal';
-import { auth, db } from './firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, collection, addDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import {
+  isLoggedIn,
+  apiGetProfile,
+  apiGetMyLeaveRequests,
+  apiGetPendingLeaves,
+  apiSubmitLeave,
+  apiApproveLeave,
+  apiRejectLeave,
+  apiLogout
+} from './api';
 
 const App = () => {
-    const [user, setUser] = useState(null); // { role, id }
-    const [isDemo, setIsDemo] = useState(false);
+    const [user, setUser] = useState(null);
     const [isRegistering, setIsRegistering] = useState(false);
     const [activeSection, setActiveSection] = useState('');
     const [notification, setNotification] = useState(null);
     const [leaveRequests, setLeaveRequests] = useState([]);
+    const [authChecked, setAuthChecked] = useState(false);
 
     const getInitials = (name) => {
         if (!name) return '??';
@@ -24,210 +34,146 @@ const App = () => {
         return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
     };
 
-    const studentProfile = {
-        details: {
-            'Full Name': 'Santhosh John',
-            'Department': 'Computer Science & Engineering',
-            'Year': 'II Year - IV Sem',
-            'Register Number': '921422104051',
-            'Email ID': 'santhosh.cse@college.edu',
-            'Faculty Advisor': 'Dr. R. Meena',
-            'Date of Birth': '13/03/2007',
-        }
-    };
-
-    studentProfile.initials = getInitials(studentProfile.details['Full Name']);
-
-
-
-    // ... inside App component ...
-
-    useEffect(() => {
-        if (isDemo) return;
-
-        const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                // Real-time listener for user details to handle race conditions during registration
-                const userUnsub = onSnapshot(doc(db, 'users', firebaseUser.uid), (docSnap) => {
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        setUser({ role: userData.role, id: firebaseUser.uid, ...userData });
-                    } else {
-                        // Doc might not exist yet during registration, wait for it (do nothing or set basic info)
-                        setUser({ role: 'student', id: firebaseUser.uid, name: 'Loading...' });
-                    }
-                });
-
-                // Store the unsubscribe function to clean it up? 
-                // In this simple app structure, we might rely on the main useEffect cleanup, 
-                // but strictly we should track this. For now, it's acceptable.
-            } else {
-                setUser(null);
-            }
-        });
-
-        // Real-time listener for leave requests
-        const q = query(collection(db, 'leave_requests'), orderBy('createdAt', 'desc'));
-        const unsubscribeLeave = onSnapshot(q, (snapshot) => {
-            const requests = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setLeaveRequests(requests);
-            console.log('Real-time leave requests:', requests);
-        }, (error) => {
-            console.error("Error fetching leave requests: ", error);
-        });
-
-        if (user) {
-            const initialSections = {
-                student: 'profile',
-                staff: 'pending',
-                parent: 'status'
-            };
-            setActiveSection(initialSections[user.role]);
-        }
-
-        // Cleanup function to unsubscribe from both listeners
-        return () => {
-            unsubscribeAuth();
-            unsubscribeLeave();
-        };
-    }, [user?.role]); // Re-run if user role changes, though mainly we want this on mount/auth change
-
-    const handleLogin = (role, id) => {
-        setUser({ role, id });
-    };
-
-    const handleDemoLogin = (role = 'student') => {
-        setIsDemo(true);
-        const demoProfiles = {
-            student: {
-                role: 'student',
-                id: 'demo-student',
-                name: 'Demo Student',
-                department: 'CSE',
-                year: 'II Year',
-                regNo: '921422104051',
-                email: 'demo@student.edu'
-            },
-            staff: {
-                role: 'staff',
-                id: 'demo-staff',
-                name: 'Dr. Demo Staff',
-                department: 'CSE',
-                email: 'staff@college.edu'
-            },
-            parent: {
-                role: 'parent',
-                id: 'demo-parent',
-                name: 'Demo Parent',
-                regNo: '921422104051',
-                email: 'parent@home.edu'
-            }
-        };
-
-        setUser(demoProfiles[role] || demoProfiles['student']);
-        showNotification(`Entered Demo Mode as ${role.toUpperCase()}`);
-    };
-
-    const handleRegister = (data) => {
-        showNotification('Registration successful! You can now login.');
-        setIsRegistering(false);
-    };
-
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-            setUser(null);
-            setActiveSection('');
-            setIsRegistering(false);
-        } catch (err) {
-            console.error('Logout error:', err);
-        }
-    };
-
     const showNotification = (msg) => {
         setNotification(msg);
         setTimeout(() => setNotification(null), 3000);
     };
 
-    const handleSubmitLeave = async (formData) => {
-        const newRequest = {
-            ...formData,
-            id: isDemo ? `demo-${Date.now()}` : undefined, // Add mock ID for demo
-            studentName: studentProfile.details['Full Name'],
-            regNo: studentProfile.details['Register Number'],
-            parentMobile: '9876543210', // Mock parent number
-            status: 'Pending',
-            note: '-',
-            createdAt: isDemo ? new Date().toISOString() : serverTimestamp()
+    const loadProfile = useCallback(async () => {
+        try {
+            const profile = await apiGetProfile();
+            setUser(profile);
+            return profile;
+        } catch {
+            apiLogout();
+            setUser(null);
+            return null;
+        }
+    }, []);
+
+    const loadLeaveRequests = useCallback(async (role) => {
+        try {
+            if (role === 'staff') {
+                const data = await apiGetPendingLeaves();
+                setLeaveRequests(data);
+            } else {
+                const data = await apiGetMyLeaveRequests();
+                setLeaveRequests(data);
+            }
+        } catch {
+            setLeaveRequests([]);
+        }
+    }, []);
+
+    useEffect(() => {
+        const init = async () => {
+            if (isLoggedIn()) {
+                const profile = await loadProfile();
+                if (profile) {
+                    await loadLeaveRequests(profile.role);
+                }
+            }
+            setAuthChecked(true);
         };
+        init();
+    }, [loadProfile, loadLeaveRequests]);
 
-        if (isDemo) {
-            // Mock submission for Demo Mode
-            setLeaveRequests([newRequest, ...leaveRequests]);
-            showNotification('Demo Mode: Leave submitted successfully!');
-            return;
+    useEffect(() => {
+        if (user) {
+            const initialSections = {
+                student: 'dashboard',
+                staff: 'pending',
+                parent: 'status'
+            };
+            setActiveSection(initialSections[user.role]);
         }
+    }, [user?.role]);
 
+    const handleLoginSuccess = async (userData) => {
+        setUser(userData);
+        await loadLeaveRequests(userData.role);
+    };
+
+    const handleRegister = async (userData) => {
+        showNotification('Registration successful! You can now login.');
+        setUser(userData);
+        await loadLeaveRequests(userData.role);
+    };
+
+    const handleLogout = () => {
+        apiLogout();
+        setUser(null);
+        setActiveSection('');
+        setIsRegistering(false);
+        setLeaveRequests([]);
+    };
+
+    const handleSubmitLeave = async (formData) => {
         try {
-            await addDoc(collection(db, 'leave_requests'), newRequest);
+            await apiSubmitLeave(formData);
             showNotification('Leave application submitted successfully!');
-            // No need to manually update state, onSnapshot will handle it
+            await loadLeaveRequests(user.role);
         } catch (err) {
-            console.error('Error submitting leave:', err);
-            showNotification('Error submitting application. Try again.');
+            showNotification(err.message || 'Error submitting application. Try again.');
         }
     };
 
-    const handleUpdateStatus = async (id, status, note) => {
-        if (isDemo) {
-            // Mock update for Demo Mode
-            setLeaveRequests(leaveRequests.map(req =>
-                req.id === id ? { ...req, status, note } : req
-            ));
-            if (status === 'Approved') {
-                showNotification(`Demo: SMS Sent -> உங்கள் குழந்தையின் விடுப்பு ஏற்கப்பட்டது`);
-            } else {
-                showNotification(`Demo: Leave ${status}.`);
-            }
-            return;
-        }
-
+    const handleApproveLeave = async (id) => {
         try {
-            const requestRef = doc(db, 'leave_requests', id);
-            await updateDoc(requestRef, {
-                status: status,
-                note: note
-            });
-
-            if (status === 'Approved') {
-                showNotification(`SMS Sent: உங்கள் குழந்தையின் விடுப்பு ஏற்கப்பட்டது`);
-            } else {
-                showNotification(`Leave ${status}. Status updated.`);
-            }
+            await apiApproveLeave(id);
+            showNotification('Leave approved.');
+            await loadLeaveRequests(user.role);
         } catch (err) {
-            console.error('Error updating status:', err);
-            showNotification('Error updating status.');
+            showNotification(err.message || 'Error approving leave.');
         }
     };
+
+    const handleRejectLeave = async (id, reviewComment) => {
+        try {
+            await apiRejectLeave(id, reviewComment);
+            showNotification('Leave rejected.');
+            await loadLeaveRequests(user.role);
+        } catch (err) {
+            showNotification(err.message || 'Error rejecting leave.');
+        }
+    };
+
+    if (!authChecked) {
+        return (
+            <div className="login-wrapper">
+                <div style={{ margin: 'auto', textAlign: 'center', color: '#6B6875' }}>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (!user) {
         return isRegistering ? (
             <Register
                 onRegister={handleRegister}
                 toggleAuth={() => setIsRegistering(false)}
-                onDemo={handleDemoLogin}
             />
         ) : (
-            <Auth
-                onLogin={handleLogin}
+            <Login
+                onLoginSuccess={handleLoginSuccess}
                 toggleRegister={() => setIsRegistering(true)}
-                onDemo={handleDemoLogin}
             />
         );
     }
+
+    const studentProfile = {
+        initials: getInitials(user.name || 'Student'),
+        details: {
+            'Full Name': user.name || 'Not provided',
+            'Register Number': user.regNo || 'Not provided',
+            'Department': user.department || 'Not provided',
+            'Year': user.year ? (user.year.includes('Year') ? user.year : `${user.year} Year`) : 'Not provided',
+            'Section': user.section || 'Not provided',
+            'Email ID': user.email || 'Not provided',
+            'Mobile Number': user.mobile || 'Not provided',
+        }
+    };
 
     return (
         <div className="dashboard-layout" style={{ display: 'flex' }}>
@@ -239,29 +185,25 @@ const App = () => {
             />
 
             <main className="main-content" style={{ marginLeft: 'var(--sidebar-width)', padding: '2rem', width: '100%', minHeight: '100vh', transition: 'var(--transition)' }}>
-                {user.role === 'student' && (
-                    <StudentPortal
-                        section={activeSection}
-                        profile={{
-                            initials: getInitials(user.name || 'Student'),
-                            details: {
-                                'Full Name': user.name || 'Student',
-                                'Department': user.department || 'CSE', // Defaulting to CSE as it's not in Register form yet
-                                'Year': user.year ? (user.year.includes('Year') ? user.year : `${user.year} Year`) : 'N/A',
-                                'Register Number': user.regNo || 'N/A',
-                                'Email ID': user.email || '',
-                            }
-                        }}
-                        leaveRequests={leaveRequests.filter(r => r.regNo === user.regNo || r.regNo === '921422104051')}
-                        onSubmitLeave={handleSubmitLeave}
-                    />
+                {user.role === 'student' && activeSection === 'dashboard' && (
+                    <Dashboard profile={studentProfile} leaveRequests={leaveRequests} />
+                )}
+                {user.role === 'student' && activeSection === 'profile' && (
+                    <MyProfile profile={studentProfile} />
+                )}
+                {user.role === 'student' && activeSection === 'apply' && (
+                    <ApplyLeave onSubmitLeave={handleSubmitLeave} />
+                )}
+                {user.role === 'student' && activeSection === 'history' && (
+                    <AcademicHistory leaveRequests={leaveRequests} />
                 )}
 
                 {user.role === 'staff' && (
                     <StaffPortal
                         section={activeSection}
                         leaveRequests={leaveRequests}
-                        onUpdateStatus={handleUpdateStatus}
+                        onApprove={handleApproveLeave}
+                        onReject={handleRejectLeave}
                     />
                 )}
 
@@ -269,13 +211,15 @@ const App = () => {
                     <ParentPortal
                         section={activeSection}
                         studentName={user.name || 'Student'}
-                        leaveRequests={leaveRequests.filter(r => r.regNo === user.regNo || r.regNo === '921422104051')}
+                        department={user.department || 'Not provided'}
+                        year={user.year || 'Not provided'}
+                        leaveRequests={leaveRequests}
                     />
                 )}
             </main>
 
             {notification && (
-                <div className="success-overlay show" style={{ position: 'fixed', top: '20px', right: '20px', background: '#28c76f', color: 'white', padding: '15px 25px', borderRadius: '12px', zIndex: 2000 }}>
+                <div style={{ position: 'fixed', top: '20px', right: '20px', background: '#6C4AB6', color: 'white', padding: '15px 25px', borderRadius: '12px', zIndex: 2000, fontSize: '0.88rem', fontWeight: 500, boxShadow: '0 4px 16px rgba(108, 74, 182, 0.3)' }}>
                     {notification}
                 </div>
             )}

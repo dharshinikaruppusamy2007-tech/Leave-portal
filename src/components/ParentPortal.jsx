@@ -1,10 +1,10 @@
- import React from 'react';
+import React from 'react';
 
-const ParentPortal = ({ section, studentName, leaveRequests }) => {
+const ParentPortal = ({ section, studentName, department, year, leaveRequests }) => {
     if (section === 'status') {
         const lastApproved = [...leaveRequests].reverse().find(r => r.status === 'Approved');
         const today = new Date().toISOString().split('T')[0];
-        const isOnLeave = lastApproved && lastApproved.date === today;
+        const isOnLeave = lastApproved && lastApproved.fromDate === today;
 
         return (
             <div className="section slide-in active">
@@ -24,7 +24,7 @@ const ParentPortal = ({ section, studentName, leaveRequests }) => {
                         </div>
                         <div style={{ flex: 1, minWidth: '250px' }}>
                             <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>{studentName}</h2>
-                            <p style={{ color: 'var(--text-dim)', marginBottom: '1rem' }}>Computer Science & Engineering | III Year</p>
+                            <p style={{ color: 'var(--text-dim)', marginBottom: '1rem' }}>{department || 'Not provided'} | {year || 'Not provided'}</p>
                             <div style={{ display: 'flex', gap: '2rem' }}>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px' }}>Attendance</label>
@@ -38,13 +38,10 @@ const ParentPortal = ({ section, studentName, leaveRequests }) => {
                         </div>
                         <div style={{ textAlign: 'center', padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: isOnLeave ? '#ff9f43' : '#28c76f' }}>
-                                {isOnLeave ? '🏃' : '✅'}
+                                {isOnLeave ? '...' : 'OK'}
                             </div>
                             <div style={{ fontSize: '1rem', fontWeight: 600 }}>
                                 {isOnLeave ? 'On Approved Leave' : 'In College'}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>
-                                {isOnLeave ? 'விடுப்பில் உள்ளார்' : 'கல்லூரியில் உள்ளார்'}
                             </div>
                         </div>
                     </div>
@@ -61,7 +58,7 @@ const ParentPortal = ({ section, studentName, leaveRequests }) => {
                         Detailed History
                     </h1>
                     <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', letterSpacing: '1px' }}>
-                        COMPLETE LEAVE ARCHIVE • விரிவான வரலாறு
+                        COMPLETE LEAVE ARCHIVE
                     </p>
                 </div>
                 <div className="glass-card">
@@ -69,33 +66,28 @@ const ParentPortal = ({ section, studentName, leaveRequests }) => {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Date <span style={{ display: 'block', fontSize: '0.7rem', opacity: 0.7 }}>தேதி</span></th>
-                                    <th>Type <span style={{ display: 'block', fontSize: '0.7rem', opacity: 0.7 }}>வகை</span></th>
-                                    <th>Reason <span style={{ display: 'block', fontSize: '0.7rem', opacity: 0.7 }}>காரணம்</span></th>
-                                    <th>Status <span style={{ display: 'block', fontSize: '0.7rem', opacity: 0.7 }}>நிலை</span></th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {leaveRequests.length > 0 ? (
-                                    leaveRequests.map((req) => {
-                                        const tamilType = req.type === 'Medical' ? 'மருத்துவம்' : (req.type === 'On-Duty' ? 'பணி நிமித்தம்' : 'தனிப்பட்ட');
-                                        const tamilStatus = req.status === 'Approved' ? 'அங்கீகரிக்கப்பட்டது' : (req.status === 'Rejected' ? 'நிராகரிக்கப்பட்டது' : 'செயலாக்கத்தில் உள்ளது');
-                                        return (
-                                            <tr key={req.id}>
-                                                <td>{req.date}</td>
-                                                <td>{req.type} <br /><span style={{ fontSize: '0.8rem', opacity: 0.7 }}>{tamilType}</span></td>
-                                                <td>{req.reason}</td>
-                                                <td>
-                                                    <span className={`status-pill status-${req.status.toLowerCase()}`}>{req.status}</span>
-                                                    <br /><span style={{ fontSize: '0.8rem', opacity: 0.7 }}>{tamilStatus}</span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
+                                    leaveRequests.map((req) => (
+                                        <tr key={req._id}>
+                                            <td>{req.fromDate}</td>
+                                            <td>{req.leaveType}</td>
+                                            <td>{req.reason}</td>
+                                            <td>
+                                                <span className={`status-pill status-${req.status.toLowerCase()}`}>{req.status}</span>
+                                            </td>
+                                        </tr>
+                                    ))
                                 ) : (
                                     <tr>
                                         <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
-                                            No student records found. Please ensure the backend server is running.
+                                            No student records found.
                                         </td>
                                     </tr>
                                 )}
