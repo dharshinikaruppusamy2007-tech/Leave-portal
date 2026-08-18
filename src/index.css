@@ -1016,6 +1016,193 @@ tr:hover td {
 }
 
 /* ========================================
+   STAFF PORTAL - Uses sp-* Design System
+   ======================================== */
+
+/* Staff approval cards grid */
+.stp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Staff approval card - same as sp-card */
+.stp-approval-card {
+  background: #ffffff;
+  border: 1px solid #E5E0F2;
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.stp-approval-card:hover {
+  box-shadow: 0 2px 12px rgba(59, 40, 95, 0.06);
+}
+
+/* Card student info - reuse sp-profile-grid */
+.stp-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+/* Reason section */
+.stp-reason-section {
+  background: #F8F7FC;
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+}
+
+.stp-reason-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6B6875;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 0 0 0.3rem;
+}
+
+.stp-reason-value {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #1F1F29;
+  margin: 0;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* Rejection input - reuse sp-input */
+.stp-reject-group {
+  margin-bottom: 1.2rem;
+}
+
+.stp-reject-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6C4AB6;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.45rem;
+}
+
+.stp-reject-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1.5px solid #D9D4E7;
+  border-radius: 9px;
+  color: #1F1F29;
+  font-size: 0.88rem;
+  font-family: 'Inter', 'Poppins', sans-serif;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.stp-reject-input::placeholder {
+  color: #A8A4B3;
+}
+
+.stp-reject-input:focus {
+  border-color: #6C4AB6;
+  box-shadow: 0 0 0 3px rgba(108, 74, 182, 0.1);
+}
+
+/* Approve / Reject buttons */
+.stp-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.stp-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', 'Poppins', sans-serif;
+  border: none;
+  padding: 0 24px;
+  letter-spacing: 1px;
+}
+
+.stp-btn-approve {
+  background: rgba(40, 199, 111, 0.12);
+  color: #28c76f;
+  border: 1px solid rgba(40, 199, 111, 0.4);
+}
+
+.stp-btn-approve:hover {
+  background: rgba(40, 199, 111, 0.22);
+  border-color: #28c76f;
+  box-shadow: 0 4px 12px rgba(40, 199, 111, 0.15);
+}
+
+.stp-btn-reject {
+  background: rgba(234, 84, 85, 0.12);
+  color: #ea5455;
+  border: 1px solid rgba(234, 84, 85, 0.4);
+}
+
+.stp-btn-reject:hover {
+  background: rgba(234, 84, 85, 0.22);
+  border-color: #ea5455;
+  box-shadow: 0 4px 12px rgba(234, 84, 85, 0.15);
+}
+
+/* Staff empty state */
+.stp-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6B6875;
+}
+
+.stp-empty p {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #3B285F;
+  margin: 0;
+}
+
+/* Staff records table card */
+.stp-records-card {
+  background: #ffffff;
+  border: 1px solid #E5E0F2;
+  border-radius: 14px;
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+/* Staff Portal Responsive */
+@media (max-width: 768px) {
+  .stp-grid {
+    grid-template-columns: 1fr;
+  }
+  .stp-info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .stp-actions {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .stp-btn {
+    width: 100%;
+  }
+}
+
+/* ========================================
    STUDENT PORTAL - Clean White + Purple
    ======================================== */
 

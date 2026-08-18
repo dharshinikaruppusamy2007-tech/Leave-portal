@@ -89,6 +89,12 @@ const App = () => {
         }
     }, [user?.role]);
 
+    useEffect(() => {
+        if (user && activeSection === 'pending') {
+            loadLeaveRequests('staff');
+        }
+    }, [user, activeSection, loadLeaveRequests]);
+
     const handleLoginSuccess = async (userData) => {
         setUser(userData);
         await loadLeaveRequests(userData.role);

@@ -5,84 +5,80 @@ const StaffPortal = ({ section, leaveRequests, onApprove, onReject }) => {
 
     if (section === 'pending') {
         return (
-            <div className="section slide-in active" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <div style={{ marginBottom: '2.5rem' }}>
-                    <h1 style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: '0.5rem' }} className="cyan-glow">
-                        Pending Approvals
-                    </h1>
-                    <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', letterSpacing: '1px' }}>
-                        REVIEW AND MANAGE STUDENT LEAVE APPLICATIONS
-                    </p>
+            <div className="sp-section">
+                <div className="sp-header">
+                    <h1 className="sp-title">Pending Approvals</h1>
+                    <p className="sp-subtitle">Review and manage student leave applications.</p>
                 </div>
 
                 {leaveRequests.length === 0 ? (
-                    <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
-                        <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem' }}>No pending requests at the moment.</p>
+                    <div className="stp-empty">
+                        <p>No pending requests at the moment.</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1.5rem' }}>
+                    <div className="stp-grid">
                         {leaveRequests.map((req) => (
-                            <div key={req._id} className="glass-card fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div key={req._id} className="stp-approval-card">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                     <div>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>{req.studentName}</h3>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: 600, letterSpacing: '1px' }}>
-                                            {req.regNo || 'No Reg No'}
-                                        </span>
+                                        <h3 className="sp-profile-name">{req.studentName}</h3>
+                                        <span className="sp-profile-label">{req.regNo || 'No Reg No'}</span>
                                     </div>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '4px' }}>
-                                        {req.leaveType.toUpperCase()}
-                                    </span>
+                                    <span className="sp-type-badge">{req.leaveType}</span>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.8rem' }}>
-                                    <div>
-                                        <span style={{ color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Department</span>
-                                        <p style={{ color: 'white', marginTop: '2px' }}>{req.department || 'N/A'}</p>
+                                <div className="sp-profile-divider" style={{ marginBottom: '1rem' }} />
+
+                                <div className="stp-info-grid">
+                                    <div className="sp-profile-field">
+                                        <span className="sp-profile-label">Department</span>
+                                        <span className="sp-profile-value">{req.department || 'N/A'}</span>
                                     </div>
-                                    <div>
-                                        <span style={{ color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Section</span>
-                                        <p style={{ color: 'white', marginTop: '2px' }}>{req.section || 'N/A'}</p>
+                                    <div className="sp-profile-field">
+                                        <span className="sp-profile-label">Section</span>
+                                        <span className="sp-profile-value">{req.section || 'N/A'}</span>
+                                    </div>
+                                    <div className="sp-profile-field">
+                                        <span className="sp-profile-label">From Date</span>
+                                        <span className="sp-profile-value">{req.fromDate || 'N/A'}</span>
+                                    </div>
+                                    <div className="sp-profile-field">
+                                        <span className="sp-profile-label">To Date</span>
+                                        <span className="sp-profile-value">{req.toDate || 'N/A'}</span>
+                                    </div>
+                                    <div className="sp-profile-field">
+                                        <span className="sp-profile-label">Applied Date</span>
+                                        <span className="sp-profile-value">{req.appliedAt ? new Date(req.appliedAt).toLocaleDateString() : 'N/A'}</span>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1rem', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                                    <span>From: <span style={{ color: 'white' }}>{req.fromDate}</span></span>
-                                    {req.toDate && <span>To: <span style={{ color: 'white' }}>{req.toDate}</span></span>}
+                                <div className="sp-profile-divider" style={{ margin: '1rem 0' }} />
+
+                                <div className="stp-reason-section">
+                                    <p className="stp-reason-label">Reason</p>
+                                    <p className="stp-reason-value">{req.reason}</p>
                                 </div>
 
-                                <div style={{ marginBottom: '1rem', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                                    Applied: {req.appliedAt ? new Date(req.appliedAt).toLocaleDateString() : 'N/A'}
-                                </div>
-
-                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.2rem', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Reason:</p>
-                                    <p style={{ fontSize: '0.95rem', color: 'white', lineHeight: '1.5' }}>{req.reason}</p>
-                                </div>
-
-                                <div style={{ marginBottom: '1.2rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px' }}>Rejection Reason (if rejecting)</label>
+                                <div className="stp-reject-group">
+                                    <label className="stp-reject-label">Rejection Reason (if rejecting)</label>
                                     <input
                                         type="text"
-                                        className="form-control"
+                                        className="stp-reject-input"
                                         placeholder="Type rejection reason..."
                                         value={notes[req._id] || ''}
                                         onChange={(e) => setNotes({ ...notes, [req._id]: e.target.value })}
-                                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}
                                     />
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: 'auto' }}>
+                                <div className="stp-actions">
                                     <button
-                                        className="btn-primary"
-                                        style={{ flex: 1, padding: '0.8rem', background: 'rgba(40, 199, 111, 0.1)', color: '#28c76f', border: '1px solid #28c76f', cursor: 'pointer' }}
+                                        className="stp-btn stp-btn-approve"
                                         onClick={() => onApprove(req._id)}
                                     >
                                         APPROVE
                                     </button>
                                     <button
-                                        className="btn-primary"
-                                        style={{ flex: 1, padding: '0.8rem', background: 'rgba(234, 84, 85, 0.1)', color: '#ea5455', border: '1px solid #ea5455', cursor: 'pointer' }}
+                                        className="stp-btn stp-btn-reject"
                                         onClick={() => onReject(req._id, notes[req._id] || '')}
                                     >
                                         REJECT
@@ -110,35 +106,31 @@ const StaffPortal = ({ section, leaveRequests, onApprove, onReject }) => {
         const students = Object.values(studentMap);
 
         return (
-            <div className="section slide-in active" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <div style={{ marginBottom: '2.5rem' }}>
-                    <h1 style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: '0.5rem' }} className="cyan-glow">
-                        Student Records
-                    </h1>
-                    <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', letterSpacing: '1px' }}>
-                        DATABASE OF STUDENT ATTENDANCE AND LEAVE RECORDS
-                    </p>
+            <div className="sp-section">
+                <div className="sp-header">
+                    <h1 className="sp-title">Student Records</h1>
+                    <p className="sp-subtitle">Database of student attendance and leave records.</p>
                 </div>
 
-                <div className="glass-card" style={{ padding: '0' }}>
-                    <div className="table-container">
-                        <table style={{ margin: '0' }}>
+                <div className="stp-records-card">
+                    <div className="sp-table-wrap">
+                        <table className="sp-table">
                             <thead>
                                 <tr>
-                                    <th>REGISTER NUMBER</th>
-                                    <th>STUDENT NAME</th>
-                                    <th style={{ textAlign: 'center' }}>TOTAL LEAVES</th>
-                                    <th style={{ textAlign: 'center' }}>APPROVED</th>
+                                    <th>Register Number</th>
+                                    <th>Student Name</th>
+                                    <th style={{ textAlign: 'center' }}>Total Leaves</th>
+                                    <th style={{ textAlign: 'center' }}>Approved</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {students.length > 0 ? (
                                     students.map((s) => (
-                                        <tr key={s.regNo} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <td style={{ padding: '1.2rem', fontWeight: 600, color: 'var(--primary-color)' }}>{s.regNo}</td>
+                                        <tr key={s.regNo}>
+                                            <td style={{ fontWeight: 600, color: '#6C4AB6' }}>{s.regNo}</td>
                                             <td>{s.name}</td>
                                             <td style={{ textAlign: 'center' }}>
-                                                <span style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem' }}>
+                                                <span className="sp-status-badge sp-status-pending">
                                                     {s.leaves}
                                                 </span>
                                             </td>
@@ -147,7 +139,7 @@ const StaffPortal = ({ section, leaveRequests, onApprove, onReject }) => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+                                        <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: '#6B6875' }}>
                                             No student records found.
                                         </td>
                                     </tr>
