@@ -4,6 +4,8 @@ const StaffPortal = ({ section, leaveRequests, onApprove, onReject }) => {
     const [notes, setNotes] = useState({});
 
     if (section === 'pending') {
+        const pendingLeaves = leaveRequests.filter(r => r.status === 'Pending');
+
         return (
             <div className="sp-section">
                 <div className="sp-header">
@@ -11,13 +13,13 @@ const StaffPortal = ({ section, leaveRequests, onApprove, onReject }) => {
                     <p className="sp-subtitle">Review and manage student leave applications.</p>
                 </div>
 
-                {leaveRequests.length === 0 ? (
+                {pendingLeaves.length === 0 ? (
                     <div className="stp-empty">
                         <p>No pending requests at the moment.</p>
                     </div>
                 ) : (
                     <div className="stp-grid">
-                        {leaveRequests.map((req) => (
+                        {pendingLeaves.map((req) => (
                             <div key={req._id} className="stp-approval-card">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                     <div>
@@ -93,17 +95,11 @@ const StaffPortal = ({ section, leaveRequests, onApprove, onReject }) => {
     }
 
     if (section === 'records') {
-        const studentMap = {};
-        leaveRequests.forEach(r => {
-            if (r.regNo) {
-                if (!studentMap[r.regNo]) {
-                    studentMap[r.regNo] = { regNo: r.regNo, name: r.studentName || 'Unknown', leaves: 0, approved: 0 };
-                }
-                studentMap[r.regNo].leaves += 1;
-                if (r.status === 'Approved') studentMap[r.regNo].approved += 1;
-            }
-        });
-        const students = Object.values(studentMap);
+        const getDays = (from, to) => {
+            if (!from || !to) return from ? 1 : 0;
+            const diff = Math.ceil((new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24)) + 1;
+            return diff > 0 ? diff : 1;
+        };
 
         return (
             <div className="sp-section">
@@ -117,29 +113,43 @@ const StaffPortal = ({ section, leaveRequests, onApprove, onReject }) => {
                         <table className="sp-table">
                             <thead>
                                 <tr>
-                                    <th>Register Number</th>
                                     <th>Student Name</th>
-                                    <th style={{ textAlign: 'center' }}>Total Leaves</th>
-                                    <th style={{ textAlign: 'center' }}>Approved</th>
+                                    <th>Register Number</th>
+                                    <th>Department</th>
+                                    <th>Section</th>
+                                    <th>Leave Type</th>
+                                    <th>From Date</th>
+                                    <th>To Date</th>
+                                    <th style={{ textAlign: 'center' }}>Days</th>
+                                    <th>Reason</th>
+                                    <th>Applied Date</th>
+                                    <th style={{ textAlign: 'center' }}>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {students.length > 0 ? (
-                                    students.map((s) => (
-                                        <tr key={s.regNo}>
-                                            <td style={{ fontWeight: 600, color: '#6C4AB6' }}>{s.regNo}</td>
-                                            <td>{s.name}</td>
+                                {leaveRequests.length > 0 ? (
+                                    leaveRequests.map((r) => (
+                                        <tr key={r._id}>
+                                            <td style={{ fontWeight: 600 }}>{r.studentName || 'Unknown'}</td>
+                                            <td style={{ fontWeight: 600, color: '#6C4AB6' }}>{r.regNo || 'N/A'}</td>
+                                            <td>{r.department || 'N/A'}</td>
+                                            <td>{r.section || 'N/A'}</td>
+                                            <td><span className="sp-type-badge">{r.leaveType}</span></td>
+                                            <td>{r.fromDate || 'N/A'}</td>
+                                            <td>{r.toDate || r.fromDate || 'N/A'}</td>
+                                            <td style={{ textAlign: 'center', fontWeight: 600 }}>{getDays(r.fromDate, r.toDate)}</td>
+                                            <td className="sp-reason-cell">{r.reason}</td>
+                                            <td style={{ color: '#6B6875', fontSize: '0.85rem' }}>{r.appliedAt ? new Date(r.appliedAt).toLocaleDateString() : 'N/A'}</td>
                                             <td style={{ textAlign: 'center' }}>
-                                                <span className="sp-status-badge sp-status-pending">
-                                                    {s.leaves}
+                                                <span className={`sp-status-badge sp-status-${r.status.toLowerCase()}`}>
+                                                    {r.status}
                                                 </span>
                                             </td>
-                                            <td style={{ textAlign: 'center', color: '#28c76f', fontWeight: 700 }}>{s.approved}</td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: '#6B6875' }}>
+                                        <td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: '#6B6875' }}>
                                             No student records found.
                                         </td>
                                     </tr>

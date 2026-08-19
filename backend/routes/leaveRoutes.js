@@ -22,6 +22,7 @@ router.post('/', authMiddleware, async (req, res) => {
       studentEmail: req.user.email || '',
       regNo: req.user.regNo || '',
       department: req.user.department || '',
+      year: req.user.year || '',
       section: req.user.section || '',
       leaveType: finalType,
       fromDate: finalFrom,
@@ -57,6 +58,19 @@ router.get('/pending', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Fetch pending leaves error:', err);
     res.status(500).json({ success: false, message: 'Server error fetching pending leaves.' });
+  }
+});
+
+router.get('/all', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'staff') {
+      return res.status(403).json({ success: false, message: 'Only staff can view all leaves.' });
+    }
+    const leaves = await Leave.find({}).sort({ appliedAt: -1 });
+    res.json(leaves);
+  } catch (err) {
+    console.error('Fetch all leaves error:', err);
+    res.status(500).json({ success: false, message: 'Server error fetching leave records.' });
   }
 });
 

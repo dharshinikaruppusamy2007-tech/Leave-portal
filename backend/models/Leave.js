@@ -6,6 +6,7 @@ const leaveSchema = new mongoose.Schema({
   studentEmail: { type: String, default: '', trim: true },
   regNo: { type: String, default: '' },
   department: { type: String, default: '' },
+  year: { type: String, default: '' },
   section: { type: String, default: '' },
   leaveType: { type: String, enum: ['Medical', 'On-Duty', 'Personal'], required: true },
   fromDate: { type: String, required: true },

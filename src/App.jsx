@@ -12,7 +12,7 @@ import {
   isLoggedIn,
   apiGetProfile,
   apiGetMyLeaveRequests,
-  apiGetPendingLeaves,
+  apiGetAllLeaves,
   apiSubmitLeave,
   apiApproveLeave,
   apiRejectLeave,
@@ -54,7 +54,7 @@ const App = () => {
     const loadLeaveRequests = useCallback(async (role) => {
         try {
             if (role === 'staff') {
-                const data = await apiGetPendingLeaves();
+                const data = await apiGetAllLeaves();
                 setLeaveRequests(data);
             } else {
                 const data = await apiGetMyLeaveRequests();
@@ -90,8 +90,8 @@ const App = () => {
     }, [user?.role]);
 
     useEffect(() => {
-        if (user && activeSection === 'pending') {
-            loadLeaveRequests('staff');
+        if (user && (activeSection === 'pending' || activeSection === 'records')) {
+            loadLeaveRequests(user.role);
         }
     }, [user, activeSection, loadLeaveRequests]);
 
@@ -230,7 +230,7 @@ const App = () => {
                 </div>
             )}
 
-            <style jsx>{`
+            <style>{`
         @media (max-width: 992px) {
           .main-content {
             margin-left: 80px !important;

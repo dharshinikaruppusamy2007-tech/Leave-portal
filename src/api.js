@@ -76,6 +76,10 @@ export async function apiGetPendingLeaves() {
   return request('/leave-requests/pending');
 }
 
+export async function apiGetAllLeaves() {
+  return request('/leave-requests/all');
+}
+
 export async function apiSubmitLeave(formData) {
   return request('/leave-requests', {
     method: 'POST',
