@@ -1,7 +1,7 @@
 import React from 'react';
-import { LayoutDashboard, User, Send, History, Clock, Users, Info, List, LogOut } from 'lucide-react';
+import { LayoutDashboard, User, Send, History, Clock, Users, Info, List, LogOut, Bell } from 'lucide-react';
 
-const Sidebar = ({ role, activeSection, setActiveSection, onLogout }) => {
+const Sidebar = ({ role, activeSection, setActiveSection, onLogout, unreadCount }) => {
     const menuItems = {
         student: [
             { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
@@ -14,8 +14,9 @@ const Sidebar = ({ role, activeSection, setActiveSection, onLogout }) => {
             { id: 'records', label: 'Student Records', icon: <Users size={20} /> },
         ],
         parent: [
-            { id: 'status', label: 'Status', icon: <Info size={20} /> },
-            { id: 'detailed', label: 'Detailed History', icon: <List size={20} /> },
+            { id: 'status', label: 'Ward Status', icon: <Info size={20} /> },
+            { id: 'history', label: 'Leave History', icon: <List size={20} /> },
+            { id: 'notifications', label: 'Notifications', icon: <Bell size={20} /> },
         ],
     };
 
@@ -35,6 +36,24 @@ const Sidebar = ({ role, activeSection, setActiveSection, onLogout }) => {
                     >
                         {item.icon}
                         <span>{item.label}</span>
+                        {item.id === 'notifications' && unreadCount > 0 && (
+                            <span style={{
+                                marginLeft: 'auto',
+                                background: '#ea5455',
+                                color: '#fff',
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                borderRadius: '50%',
+                                minWidth: '18px',
+                                height: '18px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '0 4px'
+                            }}>
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                        )}
                     </button>
                 ))}
             </nav>

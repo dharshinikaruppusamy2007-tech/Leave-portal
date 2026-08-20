@@ -12,6 +12,8 @@ const Register = ({ onRegister, toggleAuth }) => {
     const [department, setDepartment] = useState('');
     const [section, setSection] = useState('');
     const [mobile, setMobile] = useState('');
+    const [parentName, setParentName] = useState('');
+    const [parentMobile, setParentMobile] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -26,17 +28,26 @@ const Register = ({ onRegister, toggleAuth }) => {
 
         setLoading(true);
         try {
-            const data = await apiRegister({
+            const payload = {
                 name,
-                email,
                 password,
                 role,
-                regNo,
-                year,
-                department,
-                section,
                 mobile
-            });
+            };
+
+            if (role === 'student') {
+                payload.email = email;
+                payload.regNo = regNo;
+                payload.year = year;
+                payload.department = department;
+                payload.section = section;
+                payload.parentName = parentName;
+                payload.parentMobile = parentMobile;
+            } else if (role === 'parent') {
+                payload.mobile = mobile;
+            }
+
+            const data = await apiRegister(payload);
             onRegister(data.user);
         } catch (err) {
             setError(err.message || 'Registration failed. Please try again.');
@@ -71,6 +82,22 @@ const Register = ({ onRegister, toggleAuth }) => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="login-field">
+                        <label className="login-label">ROLE</label>
+                        <div className="login-select-wrapper">
+                            <select
+                                className="login-input login-select"
+                                value={role}
+                                onChange={(e) => { setRole(e.target.value); setError(''); }}
+                            >
+                                <option value="student">Student Module</option>
+                            </select>
+                            <svg className="login-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M6 9L12 15L18 9" stroke="#6B6875" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div className="login-field">
                         <label className="login-label">FULL NAME</label>
                         <input
                             type="text"
@@ -82,102 +109,116 @@ const Register = ({ onRegister, toggleAuth }) => {
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.8rem' }}>
-                        <div className="login-field" style={{ flex: 1 }}>
-                            <label className="login-label">REGISTER NO</label>
-                            <input
-                                type="text"
-                                className="login-input"
-                                placeholder="Register number"
-                                value={regNo}
-                                onChange={(e) => setRegNo(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="login-field" style={{ flex: 1 }}>
-                            <label className="login-label">YEAR</label>
-                            <div className="login-select-wrapper">
-                                <select
-                                    className="login-input login-select"
-                                    value={year}
-                                    onChange={(e) => setYear(e.target.value)}
-                                    required
-                                >
-                                    <option value="">Select year</option>
-                                    <option value="I">I Year</option>
-                                    <option value="II">II Year</option>
-                                    <option value="III">III Year</option>
-                                    <option value="IV">IV Year</option>
-                                </select>
-                                <svg className="login-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M6 9L12 15L18 9" stroke="#6B6875" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
+                    {role === 'student' && (
+                        <>
+                            <div style={{ display: 'flex', gap: '0.8rem' }}>
+                                <div className="login-field" style={{ flex: 1 }}>
+                                    <label className="login-label">REGISTER NO</label>
+                                    <input
+                                        type="text"
+                                        className="login-input"
+                                        placeholder="Register number"
+                                        value={regNo}
+                                        onChange={(e) => setRegNo(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="login-field" style={{ flex: 1 }}>
+                                    <label className="login-label">YEAR</label>
+                                    <div className="login-select-wrapper">
+                                        <select
+                                            className="login-input login-select"
+                                            value={year}
+                                            onChange={(e) => setYear(e.target.value)}
+                                            required
+                                        >
+                                            <option value="">Select year</option>
+                                            <option value="I">I Year</option>
+                                            <option value="II">II Year</option>
+                                            <option value="III">III Year</option>
+                                            <option value="IV">IV Year</option>
+                                        </select>
+                                        <svg className="login-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                            <path d="M6 9L12 15L18 9" stroke="#6B6875" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div style={{ display: 'flex', gap: '0.8rem' }}>
-                        <div className="login-field" style={{ flex: 1 }}>
-                            <label className="login-label">DEPARTMENT</label>
-                            <input
-                                type="text"
-                                className="login-input"
-                                placeholder="e.g. CSE"
-                                value={department}
-                                onChange={(e) => setDepartment(e.target.value)}
-                            />
-                        </div>
-                        <div className="login-field" style={{ flex: 1 }}>
-                            <label className="login-label">SECTION</label>
-                            <input
-                                type="text"
-                                className="login-input"
-                                placeholder="e.g. A"
-                                value={section}
-                                onChange={(e) => setSection(e.target.value)}
-                            />
-                        </div>
-                    </div>
+                            <div style={{ display: 'flex', gap: '0.8rem' }}>
+                                <div className="login-field" style={{ flex: 1 }}>
+                                    <label className="login-label">DEPARTMENT</label>
+                                    <input
+                                        type="text"
+                                        className="login-input"
+                                        placeholder="e.g. CSE"
+                                        value={department}
+                                        onChange={(e) => setDepartment(e.target.value)}
+                                    />
+                                </div>
+                                <div className="login-field" style={{ flex: 1 }}>
+                                    <label className="login-label">SECTION</label>
+                                    <input
+                                        type="text"
+                                        className="login-input"
+                                        placeholder="e.g. A"
+                                        value={section}
+                                        onChange={(e) => setSection(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     <div className="login-field">
-                        <label className="login-label">MOBILE NUMBER</label>
+                        <label className="login-label">{role === 'parent' ? 'MOBILE NUMBER' : 'YOUR MOBILE NUMBER'}</label>
                         <input
                             type="tel"
                             className="login-input"
-                            placeholder="Enter mobile number"
+                            placeholder="10-digit mobile number"
                             value={mobile}
                             onChange={(e) => setMobile(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="login-field">
-                        <label className="login-label">EMAIL ID</label>
-                        <input
-                            type="email"
-                            className="login-input"
-                            placeholder="Enter email address"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            maxLength={10}
                             required
                         />
                     </div>
 
-                    <div className="login-field">
-                        <label className="login-label">ROLE</label>
-                        <div className="login-select-wrapper">
-                            <select
-                                className="login-input login-select"
-                                value={role}
-                                onChange={(e) => setRole(e.target.value)}
-                            >
-                                <option value="student">Student Module</option>
-                                <option value="staff">Staff Module</option>
-                            </select>
-                            <svg className="login-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path d="M6 9L12 15L18 9" stroke="#6B6875" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                        </div>
-                    </div>
+                    {role === 'student' && (
+                        <>
+                            <div className="login-field">
+                                <label className="login-label">PARENT / GUARDIAN NAME</label>
+                                <input
+                                    type="text"
+                                    className="login-input"
+                                    placeholder="Enter parent or guardian name"
+                                    value={parentName}
+                                    onChange={(e) => setParentName(e.target.value)}
+                                />
+                            </div>
+                            <div className="login-field">
+                                <label className="login-label">PARENT / GUARDIAN MOBILE</label>
+                                <input
+                                    type="tel"
+                                    className="login-input"
+                                    placeholder="10-digit mobile number"
+                                    value={parentMobile}
+                                    onChange={(e) => setParentMobile(e.target.value)}
+                                    maxLength={10}
+                                />
+                            </div>
+                            <div className="login-field">
+                                <label className="login-label">EMAIL ID</label>
+                                <input
+                                    type="email"
+                                    className="login-input"
+                                    placeholder="Enter email address"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
 
                     <div className="login-field">
                         <label className="login-label">PASSWORD</label>

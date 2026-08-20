@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
+const parentRoutes = require('./routes/parentRoutes');
 
 const app = express();
 
@@ -29,6 +30,7 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/leave-requests', leaveRoutes);
+app.use('/api/parents', parentRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 

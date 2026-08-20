@@ -1,6 +1,9 @@
 const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const Leave = require('../models/Leave');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
+const { sendSMS, buildApprovalSMS, buildRejectionSMS } = require('../services/smsService');
 
 const router = express.Router();
 
@@ -90,6 +93,47 @@ router.put('/:id/approve', authMiddleware, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Leave request not found.' });
     }
 
+    try {
+      const student = await User.findById(leave.studentId);
+      const parentMobile = student ? student.parentMobile : '';
+      const parentName = student ? student.parentName : '';
+
+      if (parentMobile) {
+        const parentUser = await User.findOne({ mobile: parentMobile, role: 'parent' });
+
+        const existingNotification = await Notification.findOne({ leaveId: leave._id, status: 'Approved' });
+        if (!existingNotification) {
+          await Notification.create({
+            parentMobile,
+            parentUserId: parentUser ? parentUser._id : null,
+            studentName: leave.studentName,
+            studentId: leave.studentId,
+            regNo: leave.regNo,
+            department: leave.department,
+            year: leave.year,
+            section: leave.section,
+            leaveType: leave.leaveType,
+            fromDate: leave.fromDate,
+            toDate: leave.toDate,
+            reason: leave.reason,
+            status: 'Approved',
+            leaveId: leave._id,
+            messageEn: "Your ward's leave application has been approved by the staff.",
+            messageTa: 'உங்கள் குழந்தையின் விடுப்பு விண்ணப்பம் பணியாளரால் அனுமதிக்கப்பட்டது.'
+          });
+        }
+
+        const smsMessage = buildApprovalSMS(leave.studentName, leave.regNo, leave.fromDate, leave.toDate);
+        const smsResult = await sendSMS(parentMobile, smsMessage);
+
+        if (!smsResult.success) {
+          console.error('[SMS] Failed to send approval SMS:', smsResult.error);
+        }
+      }
+    } catch (notifErr) {
+      console.error('[Notification/SMS] Error after approval:', notifErr.message);
+    }
+
     res.json({ success: true, message: 'Leave approved.', leave });
   } catch (err) {
     console.error('Approve leave error:', err);
@@ -113,6 +157,47 @@ router.put('/:id/reject', authMiddleware, async (req, res) => {
 
     if (!leave) {
       return res.status(404).json({ success: false, message: 'Leave request not found.' });
+    }
+
+    try {
+      const student = await User.findById(leave.studentId);
+      const parentMobile = student ? student.parentMobile : '';
+      const parentName = student ? student.parentName : '';
+
+      if (parentMobile) {
+        const parentUser = await User.findOne({ mobile: parentMobile, role: 'parent' });
+
+        const existingNotification = await Notification.findOne({ leaveId: leave._id, status: 'Rejected' });
+        if (!existingNotification) {
+          await Notification.create({
+            parentMobile,
+            parentUserId: parentUser ? parentUser._id : null,
+            studentName: leave.studentName,
+            studentId: leave.studentId,
+            regNo: leave.regNo,
+            department: leave.department,
+            year: leave.year,
+            section: leave.section,
+            leaveType: leave.leaveType,
+            fromDate: leave.fromDate,
+            toDate: leave.toDate,
+            reason: leave.reason,
+            status: 'Rejected',
+            leaveId: leave._id,
+            messageEn: "Your ward's leave application has been rejected by the staff.",
+            messageTa: 'உங்கள் குழந்தையின் விடுப்பு விண்ணப்பம் பணியாளரால் நிராகரிக்கப்பட்டது.'
+          });
+        }
+
+        const smsMessage = buildRejectionSMS(leave.studentName, leave.regNo, leave.fromDate, leave.toDate);
+        const smsResult = await sendSMS(parentMobile, smsMessage);
+
+        if (!smsResult.success) {
+          console.error('[SMS] Failed to send rejection SMS:', smsResult.error);
+        }
+      }
+    } catch (notifErr) {
+      console.error('[Notification/SMS] Error after rejection:', notifErr.message);
     }
 
     res.json({ success: true, message: 'Leave rejected.', leave });

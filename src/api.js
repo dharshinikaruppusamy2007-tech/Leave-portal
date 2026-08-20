@@ -103,3 +103,39 @@ export async function apiRejectLeave(id, reviewComment) {
 export function apiLogout() {
   clearToken();
 }
+
+export async function apiParentSendOTP(mobile) {
+  return request('/parents/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ mobile })
+  });
+}
+
+export async function apiParentVerifyOTP(mobile, otp) {
+  const data = await request('/parents/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ mobile, otp })
+  });
+  setToken(data.token);
+  return data;
+}
+
+export async function apiGetParentWards() {
+  return request('/parents/wards');
+}
+
+export async function apiGetParentLeaves() {
+  return request('/parents/ward-leaves');
+}
+
+export async function apiGetParentNotifications() {
+  return request('/parents/notifications');
+}
+
+export async function apiMarkNotificationRead(id) {
+  return request(`/parents/notifications/${id}/read`, { method: 'PUT' });
+}
+
+export async function apiMarkAllNotificationsRead() {
+  return request('/parents/notifications/read-all', { method: 'PUT' });
+}

@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
   department: { type: String, trim: true, default: '' },
   section: { type: String, trim: true, default: '' },
   mobile: { type: String, trim: true, default: '' },
+  parentName: { type: String, trim: true, default: '' },
+  parentMobile: { type: String, trim: true, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
 

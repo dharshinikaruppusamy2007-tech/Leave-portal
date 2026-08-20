@@ -7,15 +7,35 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
   console.log('REGISTER REQUEST RECEIVED', req.body);
   try {
-    const { name, email, password, role, regNo, year, department, section, mobile } = req.body;
+    const { name, email, password, role, regNo, year, department, section, mobile, parentName, parentMobile } = req.body;
 
-    if (!name || !email || !password || !role) {
+    if (!name || !password || !role) {
       return res.status(400).json({ success: false, message: 'Please fill all required fields.' });
     }
 
-    const existingEmail = await User.findOne({ email: email.toLowerCase() });
-    if (existingEmail) {
-      return res.status(409).json({ success: false, message: 'Email already registered.' });
+    let finalEmail = email;
+
+    if (role === 'parent') {
+      if (!mobile) {
+        return res.status(400).json({ success: false, message: 'Mobile number is required for parent registration.' });
+      }
+      if (!/^[6-9]\d{9}$/.test(mobile)) {
+        return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit Indian mobile number.' });
+      }
+      const existingMobile = await User.findOne({ mobile, role: 'parent' });
+      if (existingMobile) {
+        return res.status(409).json({ success: false, message: 'An account with this mobile number already exists.' });
+      }
+      finalEmail = `parent_${mobile}@leaveportal.local`;
+    } else {
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Email is required.' });
+      }
+      finalEmail = email.toLowerCase();
+      const existingEmail = await User.findOne({ email: finalEmail });
+      if (existingEmail) {
+        return res.status(409).json({ success: false, message: 'Email already registered.' });
+      }
     }
 
     if (regNo && role === 'student') {
@@ -31,14 +51,16 @@ router.post('/register', async (req, res) => {
 
     const user = new User({
       name,
-      email: email.toLowerCase(),
+      email: finalEmail,
       password,
       role,
       regNo: regNo || '',
       year: year || '',
       department: department || '',
       section: section || '',
-      mobile: mobile || ''
+      mobile: mobile || '',
+      parentName: parentName || '',
+      parentMobile: parentMobile || ''
     });
 
     await user.save();

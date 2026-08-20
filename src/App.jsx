@@ -13,6 +13,8 @@ import {
   apiGetProfile,
   apiGetMyLeaveRequests,
   apiGetAllLeaves,
+  apiGetParentLeaves,
+  apiGetParentNotifications,
   apiSubmitLeave,
   apiApproveLeave,
   apiRejectLeave,
@@ -25,6 +27,7 @@ const App = () => {
     const [activeSection, setActiveSection] = useState('');
     const [notification, setNotification] = useState(null);
     const [leaveRequests, setLeaveRequests] = useState([]);
+    const [parentNotifications, setParentNotifications] = useState([]);
     const [authChecked, setAuthChecked] = useState(false);
 
     const getInitials = (name) => {
@@ -56,6 +59,9 @@ const App = () => {
             if (role === 'staff') {
                 const data = await apiGetAllLeaves();
                 setLeaveRequests(data);
+            } else if (role === 'parent') {
+                const data = await apiGetParentLeaves();
+                setLeaveRequests(data);
             } else {
                 const data = await apiGetMyLeaveRequests();
                 setLeaveRequests(data);
@@ -71,6 +77,12 @@ const App = () => {
                 const profile = await loadProfile();
                 if (profile) {
                     await loadLeaveRequests(profile.role);
+                    if (profile.role === 'parent') {
+                        try {
+                            const notifs = await apiGetParentNotifications();
+                            setParentNotifications(notifs);
+                        } catch { setParentNotifications([]); }
+                    }
                 }
             }
             setAuthChecked(true);
@@ -93,11 +105,20 @@ const App = () => {
         if (user && (activeSection === 'pending' || activeSection === 'records')) {
             loadLeaveRequests(user.role);
         }
+        if (user && user.role === 'parent' && activeSection === 'notifications') {
+            apiGetParentNotifications().then(n => setParentNotifications(n)).catch(() => setParentNotifications([]));
+        }
     }, [user, activeSection, loadLeaveRequests]);
 
     const handleLoginSuccess = async (userData) => {
         setUser(userData);
         await loadLeaveRequests(userData.role);
+        if (userData.role === 'parent') {
+            try {
+                const notifs = await apiGetParentNotifications();
+                setParentNotifications(notifs);
+            } catch { setParentNotifications([]); }
+        }
     };
 
     const handleRegister = async (userData) => {
@@ -112,6 +133,7 @@ const App = () => {
         setActiveSection('');
         setIsRegistering(false);
         setLeaveRequests([]);
+        setParentNotifications([]);
     };
 
     const handleSubmitLeave = async (formData) => {
@@ -178,6 +200,8 @@ const App = () => {
             'Section': user.section || 'Not provided',
             'Email ID': user.email || 'Not provided',
             'Mobile Number': user.mobile || 'Not provided',
+            'Parent Name': user.parentName || 'Not provided',
+            'Parent Mobile': user.parentMobile || 'Not provided',
         }
     };
 
@@ -188,6 +212,7 @@ const App = () => {
                 activeSection={activeSection}
                 setActiveSection={setActiveSection}
                 onLogout={handleLogout}
+                unreadCount={user.role === 'parent' ? parentNotifications.filter(n => !n.read).length : 0}
             />
 
             <main className="main-content" style={{ marginLeft: 'var(--sidebar-width)', padding: '2rem', width: '100%', minHeight: '100vh', transition: 'var(--transition)' }}>
@@ -216,10 +241,6 @@ const App = () => {
                 {user.role === 'parent' && (
                     <ParentPortal
                         section={activeSection}
-                        studentName={user.name || 'Student'}
-                        department={user.department || 'Not provided'}
-                        year={user.year || 'Not provided'}
-                        leaveRequests={leaveRequests}
                     />
                 )}
             </main>
